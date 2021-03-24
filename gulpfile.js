@@ -6,13 +6,14 @@ const autoprefixer = require('gulp-autoprefixer');
 const rename = require('gulp-rename');
 const terser = require('gulp-terser');
 const imagemin = require('gulp-imagemin');
-const gcmq = require('gulp-group-css-media-quaries');
+const gcmq = require('gulp-group-css-media-queries');
 const ttf2woff = require('gulp-ttf2woff');
 const ttf2woff2 = require('gulp-ttf2woff2');
 const del = require('del');
 const sourcemaps = require('gulp-sourcemaps');
 const cssimport = require('gulp-cssimport');
 const plumber = require('gulp-plumber');
+const eslint = require('gulp-eslint')
 const critical = require('critical').stream;
 const webp = require('gulp-webp');
 const webphtml = require('gulp-webp-html');
@@ -26,7 +27,7 @@ const ROOT_PATH = {
 const path = {
     build: {
         base: `${ROOT_PATH.BUILD}/`,
-        html: `${ROOT_PATH.BUILD}.html`,
+        html: `${ROOT_PATH.BUILD}/`,
         css: `${ROOT_PATH.BUILD}/css/`,
         js: `${ROOT_PATH.BUILD}/js/`,
         upload: `${ROOT_PATH.BUILD}/upload/`,
@@ -35,7 +36,7 @@ const path = {
     },
     dist: {
         base: `${ROOT_PATH.DIST}/`,
-        html: `${ROOT_PATH.DIST}.html`,
+        html: `${ROOT_PATH.DIST}/`,
         css: `${ROOT_PATH.DIST}/css/`,
         js: `${ROOT_PATH.DIST}/js/`,
         upload: `${ROOT_PATH.DIST}/upload/`,
@@ -45,8 +46,8 @@ const path = {
     src: {
         base: `${ROOT_PATH.PROJECT}/`,
         html: `${ROOT_PATH.PROJECT}/*.html`,
-        css: `${ROOT_PATH.PROJECT}/css/`,
-        js: `${ROOT_PATH.PROJECT}/js/`,
+        css: `${ROOT_PATH.PROJECT}/scss/**/*.scss`,
+        js: `${ROOT_PATH.PROJECT}/js/**/*.js`,
         upload: `${ROOT_PATH.PROJECT}/upload/**/*.{png,jpg,svg,gif,webp}`,
         fonts: `${ROOT_PATH.PROJECT}/fonts/**/*.{woff,ttf}`,
         img: `${ROOT_PATH.PROJECT}/img/**/*.{png,jpg,svg,gif,webp}`,
@@ -95,21 +96,19 @@ const cssTask = () => {
     if (isDist()) {
         result = src(path.src.css, { since: lastRun(cssTask) })
             .pipe(plumber())
-            .pipe(cssimport())
             .pipe(sass().on('error', sass.logError))
             .pipe(gcmq())
             .pipe(autoprefixer({
                 overrideBrowserslist: ['last 3 versions'],
                 cascade: true,
             }))
-            .pipe(cleacCSS())
-            .pipe(rename({ extname: '.min.csss'}))
+            .pipe(cleanCSS())
+            .pipe(rename({ extname: '.min.css'}))
             .pipe(dest(path.dist.css));
     } else {
         result = src(path.src.css, { since: lastRun(cssTask) })
             .pipe(sourcemaps.init())
             .pipe(plumber())
-            .pipe(cssimport())
             .pipe(sass().on('error', sass.logError))
             .pipe(rename({ extname: '.min.css' }))
             .pipe(sourcemaps.write('.'))
@@ -121,9 +120,10 @@ const cssTask = () => {
 
 const jsTask = () => src(path.src.js, { since: lastRun(jsTask) })
     .pipe(plumber())
-    .pipe(terer())
-    .pipe(renme({ extname: 'min.js' }))
+    .pipe(terser())
+    .pipe(rename({ extname: '.min.js' }))
     .pipe(dest(getDestinationPath().js));
+
 
 const imgTask = () => {
     let result;
@@ -163,7 +163,7 @@ const fontsTask = () => src(path.src.fonts)
     .pipe(dest(getDestinationPath().fonts))
     .pipe(src(path.src.fonts))
     .pipe(ttf2woff())
-    .pipe(dest(getDestinationPath().fonts()))
+    .pipe(dest(getDestinationPath().fonts))
     .pipe(src(path.src.fonts))
     .pipe(ttf2woff2())
     .pipe(dest(getDestinationPath().fonts));
